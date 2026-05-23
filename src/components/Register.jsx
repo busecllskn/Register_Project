@@ -1,64 +1,98 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Button,
   Card,
   CardBody,
   CardHeader,
   Form,
+  FormFeedback,
   FormGroup,
   Input,
   Label,
 } from "reactstrap";
 
 const initialValues = {
-    ad: "",
-    soyad: "",
-    email: "",
-    password: "",
+  ad: "",
+  soyad: "",
+  email: "",
+  password: "",
 };
 
 const errorMessages = {
-    ad: "Adınızı en az 3 karakter giriniz",
-    soyad: "Soyadınızı en az 3 karakter giriniz",
-    email: "Geçerli bir email adresi giriniz",
-    password: "En az 8 karakter, büyük harf, küçük harf, sembol ve rakam içermelidir",
+  ad: "Adınızı en az 3 karakter giriniz",
+  soyad: "Soyadınızı en az 3 karakter giriniz",
+  email: "Geçerli bir email adresi giriniz",
+  password:
+    "En az 8 karakter, büyük harf, küçük harf, sembol ve rakam içermelidir",
 };
 
 export default function Register() {
   const [formData, setFormData] = useState(initialValues);
-  const [errors, setErrors] = useState({ 
+  const [errors, setErrors] = useState({
     ad: false,
     soyad: false,
     email: false,
     password: false,
-});
+  });
   const [isValid, setIsValid] = useState(false);
 
   const validateEmail = (email) => {
     return String(email)
       .toLowerCase()
       .match(
-        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/
+        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|.(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
       );
   };
+
+  let regex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/;
+
+  useEffect(() => {
+    if (
+      formData.ad.trim().length >= 3 &&
+      formData.soyad.trim().length >= 3 &&
+      validateEmail(formData.email) &&
+      regex.test(formData.password)
+    ) {
+      setIsValid(true);
+    } else {
+      setIsValid(false);
+    }
+  }, [formData]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setFormData({ ...formData, [name]: value });
 
-    if(name == "ad" || name == "soyad") {
-        if(value.trim().length >= 3) {
-            setFormData({ ...formData, [name]: false});
-        } else {
-            setFormData({ ...formData, [name]: true});
-        }
+    if (name == "ad" || name == "soyad") {
+      if (value.trim().length >= 3) {
+        setFormData({ ...formData, [name]: false });
+      } else {
+        setFormData({ ...formData, [name]: true });
+      }
     }
-  };
 
-  
+  if (name == "email") {
+    if (validateEmail(value)) {
+      setFormData({ ...formData, [name]: false });
+    } else {
+      setFormData({ ...formData, [name]: true });
+    }
+  }
+
+  if (name == "password") {
+    if (regex.test(value)) {
+      setFormData({ ...formData, [name]: false });
+    } else {
+      setFormData({ ...formData, [name]: true });
+    }
+  }
+  };
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    if (!sValid) return;
+    axios.post ()
   };
 
   return (
@@ -76,7 +110,9 @@ export default function Register() {
                 type="text"
                 onChange={handleChange}
                 value={formData.ad}
+                invalid={errors.ad}
               />
+              {errors.ad && <FormFeedback> {errorMessages.ad}</FormFeedback>}
             </FormGroup>
 
             <FormGroup>
@@ -88,7 +124,11 @@ export default function Register() {
                 type="text"
                 onChange={handleChange}
                 value={formData.soyad}
+                invalid={errors.soyad}
               />
+              {errors.soyad && (
+                <FormFeedback> {errorMessages.soyad}</FormFeedback>
+              )}
             </FormGroup>
 
             <FormGroup>
@@ -100,7 +140,11 @@ export default function Register() {
                 type="email"
                 onChange={handleChange}
                 value={formData.email}
+                invalid={errors.email}
               />
+              {errors.email && (
+                <FormFeedback> {errorMessages.email}</FormFeedback>
+              )}
             </FormGroup>
 
             <FormGroup>
@@ -112,9 +156,13 @@ export default function Register() {
                 type="password"
                 onChange={handleChange}
                 value={formData.password}
+                invalid={errors.password}
               />
+              {errors.password && (
+                <FormFeedback> {errorMessages.password}</FormFeedback>
+              )}
             </FormGroup>
-            <Button>Kayıt Ol</Button>
+            <Button disabled={!isValid}>Kayıt Ol</Button>
           </Form>
         </CardBody>
       </Card>
