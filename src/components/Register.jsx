@@ -1,8 +1,10 @@
+import axios from "axios";
 import { useEffect, useState } from "react";
 import {
   Button,
   Card,
   CardBody,
+  CardFooter,
   CardHeader,
   Form,
   FormFeedback,
@@ -18,7 +20,7 @@ const initialValues = {
   password: "",
 };
 
-const errorMessages = {
+export const errorMessages = {
   ad: "Adınızı en az 3 karakter giriniz",
   soyad: "Soyadınızı en az 3 karakter giriniz",
   email: "Geçerli bir email adresi giriniz",
@@ -34,7 +36,9 @@ export default function Register() {
     email: false,
     password: false,
   });
+
   const [isValid, setIsValid] = useState(false);
+  const [id, setId] = useState("");
 
   const validateEmail = (email) => {
     return String(email)
@@ -44,7 +48,7 @@ export default function Register() {
       );
   };
 
-  let regex =
+  const regex =
     /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@.#$!%*?&])[A-Za-z\d@.#$!%*?&]{8,15}$/;
 
   useEffect(() => {
@@ -62,37 +66,28 @@ export default function Register() {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setFormData({ ...formData, [name]: value });
-
-    if (name == "ad" || name == "soyad") {
-      if (value.trim().length >= 3) {
-        setFormData({ ...formData, [name]: false });
-      } else {
-        setFormData({ ...formData, [name]: true });
-      }
+    setFormData({ ...formData, [name]: value }); // ✅ bu kalır
+  
+    if (name === "ad" || name === "soyad") {
+      setErrors({ ...errors, [name]: value.trim().length < 3 }); // ✅
     }
-
-  if (name == "email") {
-    if (validateEmail(value)) {
-      setFormData({ ...formData, [name]: false });
-    } else {
-      setFormData({ ...formData, [name]: true });
+    if (name === "email") {
+      setErrors({ ...errors, [name]: !validateEmail(value) }); // ✅
     }
-  }
-
-  if (name == "password") {
-    if (regex.test(value)) {
-      setFormData({ ...formData, [name]: false });
-    } else {
-      setFormData({ ...formData, [name]: true });
+    if (name === "password") {
+      setErrors({ ...errors, [name]: !regex.test(value) }); // ✅
     }
-  }
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
-    if (!sValid) return;
-    axios.post ()
+    if (!isValid) return;
+    axios.post ("https://reqres.in/api/users", formData)
+    .then ((response) => {
+     setId (response.data.id); 
+     setFormData (initialValues)
+    })
+    .catch((error) => console.warn (error));
   };
 
   return (
@@ -111,8 +106,9 @@ export default function Register() {
                 onChange={handleChange}
                 value={formData.ad}
                 invalid={errors.ad}
+                data-cy = "ad-input"
               />
-              {errors.ad && <FormFeedback> {errorMessages.ad}</FormFeedback>}
+              {errors.ad && <FormFeedback data-cy = "error-message"> {errorMessages.ad}</FormFeedback>}
             </FormGroup>
 
             <FormGroup>
@@ -125,9 +121,10 @@ export default function Register() {
                 onChange={handleChange}
                 value={formData.soyad}
                 invalid={errors.soyad}
+                data-cy = "soyad-input"
               />
               {errors.soyad && (
-                <FormFeedback> {errorMessages.soyad}</FormFeedback>
+                <FormFeedback data-cy = "error-message"> {errorMessages.soyad}</FormFeedback>
               )}
             </FormGroup>
 
@@ -141,9 +138,10 @@ export default function Register() {
                 onChange={handleChange}
                 value={formData.email}
                 invalid={errors.email}
+                data-cy = "email-input"
               />
               {errors.email && (
-                <FormFeedback> {errorMessages.email}</FormFeedback>
+                <FormFeedback data-cy = "error-message"> {errorMessages.email}</FormFeedback>
               )}
             </FormGroup>
 
@@ -157,14 +155,16 @@ export default function Register() {
                 onChange={handleChange}
                 value={formData.password}
                 invalid={errors.password}
+                data-cy = "password-input"
               />
               {errors.password && (
-                <FormFeedback> {errorMessages.password}</FormFeedback>
+                <FormFeedback data-cy = "error-message"> {errorMessages.password}</FormFeedback>
               )}
             </FormGroup>
-            <Button disabled={!isValid}>Kayıt Ol</Button>
+            <Button disabled={!isValid} data-cy ="submit-button">Kayıt Ol</Button>
           </Form>
         </CardBody>
+       {id && <CardFooter data-cy="response-message">ID: {id} </CardFooter>}
       </Card>
     </>
   );
